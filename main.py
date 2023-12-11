@@ -1,68 +1,44 @@
-import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
-import qrcode
-from PIL import Image, ImageTk
+import pyqrcode
+from PIL import Image as PILImage
+from PIL import ImageTk
+from tkinter import *
+import time
 
-# Functions
-def createQR(*args):
-    data = text_entry.get()
-    if data:
-        img = qrcode.make(data) 
-        res_img = img.resize((280,250)) 
-        tkimage= ImageTk.PhotoImage(res_img)
-        qr_canvas.delete('all')
-        qr_canvas.create_image(0,0,anchor=tk.NW, image=tkimage)
-        qr_canvas.image = tkimage
-    else:
-        messagebox.showwarning("Warning",'Enter Data in Entry First')
+root = Tk()
+photo = None  
 
-def saveQR(*args):
-    data = text_entry.get()
-    if data:
-        img = qrcode.make(data)  
-        res_img = img.resize((280,250)) 
-        
-        path = filedialog.asksaveasfilename(defaultextension=".png",)
-        if path:
-            res_img.save(path)
-            messagebox.showinfo("Sucess","QR Code is Saved ")
-    else:
-        messagebox.showwarning("Warning",'Enter Data in Entry First')
+def show():
+    global photo  # Use the global photo variable
+    qr_code = pyqrcode.create(entry.get())
+    filename = filename_entry.get()
+    qr_code.png(f'{filename}.png', scale=6)
 
-# GUI
-root = tk.Tk()
-root.title("QR Code Generator")
-root.geometry("300x400")  # Width x Height
-root.config(bg="white")
-root.resizable(0, 0)
+    time.sleep(1)  
 
-frame1 = tk.Frame(root, bd=2, relief=tk.RAISED)
-frame1.place(x=10, y=5, width=280, height=250)
+    image = PILImage.open(f"{filename}.png")
+    photo = ImageTk.PhotoImage(image)
 
-frame2 = tk.Frame(root, bd=2, relief=tk.SUNKEN)
-frame2.place(x=10, y=260, width=200, height=100)
+    label2 = Label(root, image=photo, borderwidth=3, relief=SUNKEN)
+    label2.image = photo
+    label2.grid(row=3, column=0)
 
-qr_canvas = tk.Canvas(frame1)
-qr_canvas.bind("<Double-1>",saveQR)
-qr_canvas.pack(fill=tk.BOTH)
+root.geometry("500x400")
 
-# Center Text Entry
-window_width = root.winfo_screenwidth()
-window_height = root.winfo_screenheight()
-position_top = int(window_height / 2)
-position_right = int(window_width / 2)
+label1 = Label(root, text="Enter text to generate QR code")
+label1.grid(row=0, column=0)
 
-text_entry = ttk.Entry(frame2, width=26, font=("Sitka Small", 11), justify=tk.CENTER)
-text_entry.bind("<Return>", createQR)
-text_entry.place(x=5, y=5)
+entry_value = StringVar()
+entry = Entry(root, textvariable=entry_value)
+entry.grid(row=0, column=1)
 
-btn_1 = ttk.Button(frame2, text="Create", width=10, command=createQR)
-btn_1.place(x=25, y=50)
+filename_label = Label(root, text="Enter filename for the QR code")
+filename_label.grid(row=1, column=0)
 
-btn_2 = ttk.Button(frame2, text="Save", width=10, command=saveQR)
-btn_2.place(x=100, y=50)
+button = Button(root, text="Generate QR Code", command=show)
+button.grid(row=2, column=1)
 
-btn_3 = ttk.Button(frame2, text="Exit", width=10, command=root.quit)
-btn_3.place(x=175, y=50)
+filename_value = StringVar()
+filename_entry = Entry(root, textvariable=filename_value)
+filename_entry.grid(row=1, column=1)
 
 root.mainloop()
